@@ -1,4 +1,4 @@
-# Telegram Affirmations Bot (Node/Telegraf)
+# Wisdomeme Bot (Node/Telegraf)
 
 Fast MVP Telegram bot that serves affirmations on demand and on a daily schedule using Telegraf + node-cron.
 

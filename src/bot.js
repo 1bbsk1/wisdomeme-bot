@@ -16,16 +16,16 @@ if (!token) {
 }
 
 const affirmations = [
-  'I have everything I need to succeed.',
-  'I am calm, strong, and resilient.',
-  'I trust myself to make good decisions.',
-  'I deserve good things and new opportunities.',
-  'I learn and grow from every experience.',
-  'I choose progress over perfection.',
-  'I am capable, creative, and confident.',
-  'I handle challenges with grace and clarity.',
-  'I am grateful for the wins, big and small.',
-  'I bring value to the people around me.',
+  'У меня есть всё необходимое для успеха.',
+  'Я спокоен, силён и устойчив.',
+  'Я доверяю себе и принимаю верные решения.',
+  'Я заслуживаю хорошего и новых возможностей.',
+  'Я учусь и расту в каждом опыте.',
+  'Я выбираю прогресс, а не перфекционизм.',
+  'Я способен, креативен и уверен.',
+  'Я справляюсь с задачами спокойно и ясно.',
+  'Я благодарен за победы — большие и маленькие.',
+  'Я приношу пользу людям вокруг меня.',
 ];
 
 const subscribers = new Set();
@@ -39,6 +39,17 @@ const todayAffirmation = () => {
   return affirmations[dayIndex];
 };
 
+const cronToHuman = (expr) => {
+  const parts = expr.trim().split(/\s+/);
+  if (parts.length < 2) return expr;
+  const [minute, hour] = parts;
+  const m = Number(minute);
+  const h = Number(hour);
+  if (!Number.isInteger(m) || !Number.isInteger(h) || m < 0 || m > 59 || h < 0 || h > 23) return expr;
+  const pad = (n) => n.toString().padStart(2, '0');
+  return `${pad(h)}:${pad(m)} (время сервера)`;
+};
+
 const sendAffirmation = async (chatId, text) => {
   try {
     await bot.telegram.sendMessage(chatId, text);
@@ -49,11 +60,12 @@ const sendAffirmation = async (chatId, text) => {
 
 bot.start(async (ctx) => {
   subscribers.add(ctx.chat.id);
+  const humanSchedule = cronToHuman(dailyCron);
   const lines = [
-    'Hi! I will send you daily affirmations.',
-    'Use /affirm for a random one, /today for today\'s pick.',
-    'You are subscribed to daily drops. Use /stop to opt out.',
-    `Daily schedule: ${dailyCron} (cron expression, server time).`,
+    'Привет! Я буду присылать тебе ежедневные аффирмации.',
+    'Команды: /affirm — случайная, /today — сегодняшняя.',
+    'Ты подписан на ежедневные сообщения. /stop отменит подписку.',
+    `Расписание: ${humanSchedule}.`,
   ];
   await ctx.reply(lines.join('\n'));
 });
@@ -64,17 +76,17 @@ bot.command('today', (ctx) => ctx.reply(todayAffirmation()));
 
 bot.command('subscribe', (ctx) => {
   subscribers.add(ctx.chat.id);
-  return ctx.reply('Subscribed. You will get daily affirmations.');
+  return ctx.reply('Подписка сохранена. Ежедневные аффирмации будут приходить.');
 });
 
 bot.command('stop', (ctx) => {
   subscribers.delete(ctx.chat.id);
-  return ctx.reply('Unsubscribed. Come back anytime.');
+  return ctx.reply('Подписка отключена. Возвращайся в любое время.');
 });
 
 cron.schedule(dailyCron, () => {
-  const message = `Daily affirmation: ${todayAffirmation()}`;
-  console.log(`Sending daily affirmation to ${subscribers.size} chat(s).`);
+  const message = `Ежедневная аффирмация: ${todayAffirmation()}`;
+  console.log(`Отправляю ежедневную аффирмацию в ${subscribers.size} чат(ов).`);
   subscribers.forEach((chatId) => {
     sendAffirmation(chatId, message);
   });
